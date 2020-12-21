@@ -1,0 +1,78 @@
+server:
+  port: 9201
+spring:
+  profiles:
+    active: dev
+  application:
+    name: cloud-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: www.lxing.ltd:8848
+    gateway:
+      routes: #配置路由规则
+        - id: oauth2-api-route
+          uri: lb://cloud-api
+          predicates:
+            - Path=/api/**
+          filters:
+            - StripPrefix=1
+        - id: oauth2-admin-route
+          uri: lb://service-hub-admin
+          predicates:
+            - Path=/admin/**
+          filters:
+            - StripPrefix=1
+        - id: oauth2-auth-route
+          uri: lb://cloud-auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+        - id: oauth2-monitor-route
+          uri: lb://cloud-monitor
+          predicates:
+            - Path=/monitor/**
+          filters:
+            - StripPrefix=1
+      discovery:
+        locator:
+          enabled: true #开启从注册中心动态创建路由的功能
+          lower-case-service-id: true #使用小写服务名，默认是大写
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: 'http://localhost:9401/rsa/publicKey' #配置RSA的公钥访问地址
+  redis:
+    database: 1
+    port: 6379
+    host: 47.101.141.93
+    password: admin
+
+secure:
+  ignore:
+    urls: #配置白名单路径
+      - "/actuator/**"
+      - "/swagger-ui.html/**"
+      - "/monitor/**"
+      - "/auth/oauth/token"
+      - "/doc.html"
+      - "/swagger-resources/**"
+      - "/swagger/**"
+      - "/**/v2/api-docs"
+      - "/**/*.js"
+      - "/**/*.css"
+      - "/**/*.png"
+      - "/**/*.ico"
+      - "/webjars/springfox-swagger-ui/**"
+      - "/auth/rsa/publicKey"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
